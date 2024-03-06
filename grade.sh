@@ -14,3 +14,39 @@ echo 'Finished cloning'
 
 # Then, add here code to compile and run, and do any post-processing of the
 # tests
+
+cp student-submission/*.java grading-area
+cp *.java grading-area
+cp -r lib grading-area
+
+cd grading-area
+
+if ! [ -f ListExamples.java ]
+then 
+    echo "Missing ListExamples.java in student submission"
+    echo "Score: 0"
+    exit
+fi
+
+javac -cp $CPATH *.java
+if [ $? -ne 0 ]
+then
+    echo "Compilation Error"
+    echo "Score: 0"
+    exit
+fi 
+
+java -cp $CPATH org.junit.runner.JUnitCore TestListExamples > ta-output.txt
+
+if [[ $? -eq 0 ]]
+then
+    echo "Score: 100%"
+    exit
+else
+    tests=$( cat ta-output.txt | tail -n 2 | head -n 1 | awk -F'[, ]' '{ print $3 }' )
+    failures=$( cat ta-output.txt | tail -n 2 | head -n 1 | awk -F'[, ]' '{ print $7 }' )
+    success=$((tests-failures))
+
+    score=$(echo "scale=2; $success / $tests * 100" | bc)
+    echo Score: $score%    
+fi    
